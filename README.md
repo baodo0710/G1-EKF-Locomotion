@@ -3,7 +3,7 @@
 <div align="center">
 
 ![G1 Humanoid](docs/images/g1_hero.png)
-**Training-time injection of sensor-derived state estimation for sim-to-real legged locomotion**
+**Training-time injection of sensor-derived state estimation for sim-to-real legged locomotion (https://www.robotshop.com/cdn/shop/files/pp_4519946.webp?v=1785511318&width=1024)**
 
 [![Isaac Lab](https://img.shields.io/badge/Built%20on-Isaac%20Lab-orange)](https://isaac-sim.github.io/IsaacLab/)
 [![Python](https://img.shields.io/badge/Python-3.10-blue)](https://www.python.org/)
