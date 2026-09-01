@@ -54,7 +54,7 @@ Four Gym-registered tasks provide a complete training-to-evaluation lifecycle fo
 
 <div align="center">
 
-[Flat Terrain OG Gait](docs/videos/Limping.gif)*Flat terrain gait ![Rough Terrain OG Gait](docs/videos/RoughLimp.gif)*Rough terrain gait *
+![Flat Terrain OG Gait](docs/videos/Limping.gif)**Flat terrain gait** ![Rough Terrain OG Gait](docs/videos/RoughLimp.gif)**Rough terrain gait**
 
 </div>
 
@@ -115,7 +115,7 @@ pip install -e source/g1_locomotion
 
 <div align="center">
 
-[Flat Terrain Gait](docs/videos/ImprovedGait.gif)*Current flat terrain gait synthesized from Kalman-filtered velocity estimates — no privileged velocity observed during training*![Rough Terrain Gait](docs/videos/RoughHop.gif)*Current rough terrain gait under terrain perturbation, the robot learned to hop (retrain required)*
+![Flat Terrain Gait](docs/videos/ImprovedGait.gif)*Current flat terrain gait synthesized from Kalman-filtered velocity estimates — no privileged velocity observed during training*![Rough Terrain Gait](docs/videos/RoughHop.gif)*Current rough terrain gait under terrain perturbation, the robot learned to hop (retrain required)*
 
 </div>
 
