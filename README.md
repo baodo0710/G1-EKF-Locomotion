@@ -121,26 +121,62 @@ pip install -e source/g1_locomotion
 
 ---
 
-## Roadmap
+## Development Roadmap
 
-Phase 0 and Phase 1 are complete. Subsequent phases are ordered such that each produces an independently meaningful research artifact, not merely a prerequisite for the next.
+The Rex project follows a structured, five-phase research pipeline that progresses from simulation foundation to cross-simulator validation. Each phase is gated by empirical validation milestones.
 
-### ✅ Phase 0 — Estimator Implementation & Offline Validation
-A linear per-axis Kalman filter fusing IMU integration with leg-odometry Jacobian constraints was implemented as a drop-in replacement for privileged `base_lin_vel`. Jacobian and API shape-mismatch fragility across IsaacLab versions (floating-base DOF offsets, per-body contact indexing) were resolved. The estimator achieved **0.26 m/s mean absolute error** against ground-truth base velocity in offline validation.
+### Phase Overview
 
-### ✅ Phase 1 — End-to-End RL Convergence on Estimated State
-A PPO policy was trained end-to-end against the Kalman-filtered estimate — never observing privileged velocity — achieving reward convergence from **-8.6 to 23.3** over 820 of 1500 iterations with a **99.3% episode-timeout rate**, confirming the estimator is viable as a training-time observation signal, not merely accurate in isolated offline evaluation.
+| Phase | Objective | Status | Key Deliverables |
+|:---|:---|:---:|:---|
+| **I** | Foundation & Asset Integration | ✅ Complete | High-fidelity USD articulation; 6-task Gymnasium registration |
+| **II** | Flat-Terrain Locomotion | ✅ Complete | Velocity-tracking PPO policy; full domain randomization (friction, mass, CoM) |
+| **III** | Rough-Terrain Generalization | 🔄 **Current** | Procedural height-field terrain; contact-state estimation; robust zero-velocity gait policies |
+| **IV** | Cross-Simulator Transfer & Validation | ⏳ Planned | Multi-physics policy export; sim-to-sim gap quantification; simulator-agnostic domain randomization |
+| **V** | Autonomous Behaviors in Simulation | ⏳ Future | Exteroceptive terrain perception; multi-gait latent spaces; long-horizon navigation in high-fidelity sim |
 
-### 🔄 Phase 2 — Mechanistic Gait Pathology Diagnosis (In Progress)
-Gait quality is being improved through systematic reward-term mechanistic analysis rather than blind hyperparameter tuning. Resolved pathologies to date include asymmetric leading-leg shuffle (addressed via gait and joint-symmetry rewards), half-swing on single leg (hip-pitch opposition + velocity-scaled gait reference), and single-leg hopping on rough terrain (traced to `feet_air_time` literally rewarding flight phase; disabled and replaced with explicit flight-phase and base-height penalties).
+---
 
-### ⬜ Phase 3 — Controlled Ablation & Statistical Rigor
-Multi-seed training runs (n ≥ 3) for statistical confidence; controlled ablation comparing privileged velocity, current Kalman filter, and Phase 4 error-state EKF on tracking error, gait symmetry, and episode survival; formal gait-quality metrics (stance/swing duty factor, left-right symmetry index, foot-clearance distribution) beyond scalar reward.
+### Current Progress (Phase III — Rough-Terrain Generalization)
 
-### ⬜ Phase 4 — Error-State Extended Kalman Filter Upgrade
-Extend the estimator state from velocity-only to the error-state vector `[δv, δθ, b_a, b_g]`, treating the leg-odometry residual as a genuinely nonlinear measurement function of attitude error and sensor bias. Route the same observation corruption (IMU bias drift, contact-flip probability) used for policy observations into the estimator's own prediction and update steps, closing the current train-time inconsistency where the filter never experiences the noise the policy is trained to tolerate.
+**Completed Milestones**
+- **Terrain Procedural Generation:** Integrated Isaac Lab `TerrainGenerator` with Perlin noise height fields, slope variation, and obstacle gaps. Curriculum-based difficulty scaling is active.
+- **State Estimation Architecture:** Implemented a body-frame Extended Kalman Filter (EKF) fusing corrupted IMU measurements with leg-odometry velocity corrections. The estimator operates entirely in the body frame to maintain yaw-invariance during locomotion.
+- **Observation Corruption Pipeline:** Deployed per-step sensor caches with random-walk accelerometer bias, sticky Markov-chain contact noise, and uniform gyroscope perturbation to enforce estimator-policy consistency.
+- **Biomechanical Reward Shaping:** Replaced monotonic knee-flexion rewards with Gaussian-targeted swing-phase incentives; gated contact-balance penalties to true double-support phases to avoid punishing normal single-support walking.
 
-### ⬜ Phase 5 — Sim-to-Sim Testing
+**Active Workstreams**
+- **Attitude Estimator Robustness:** Evaluating complementary-filter drift under aggressive rough-terrain perturbations. Roll/pitch observability from gravity projection is validated; yaw-invariant body-frame velocity integration is the current focus.
+- **Gait Reference Curriculum:** Cosine-decay curriculum for open-loop gait-reference rewards to prevent policy over-reliance on shaping terms. Monitoring for curriculum-cliff collapse at the 2/3 training mark.
+- **Contact-State Validation:** Finite-difference verification of body-frame Jacobian foot velocities against numerical differentiation to ensure leg-odometry accuracy.
+
+**Empirical Metrics (Current Best)**
+| Metric | Value | Notes |
+|:---|:---|:---|
+| EKF Velocity Error (body frame) | ~1.2 m/s mean | Under investigation; Jacobian indexing and Coriolis terms being validated |
+| Episode Termination (base contact) | 100% | Policy instability attributed to estimator drift; GT-quat ablation in progress |
+| Mean Episode Length | ~80 steps | Early-fall regime; expected to exceed 400 steps upon estimator convergence |
+
+---
+
+### Future Work
+
+**Phase IV — Cross-Simulator Transfer & Validation (Q4 2026)**
+
+The objective of this phase is to establish simulator-agnostic policy robustness through systematic cross-physics validation, without reliance on physical hardware.
+
+- **Multi-Physics Policy Export:** Convert converged Isaac Lab policies to ONNX for framework-agnostic inference. Validate deterministic action equivalence across PyTorch, ONNX Runtime, and TensorRT execution providers.
+- **Cross-Simulator Benchmarking:** Deploy identical policy checkpoints in PyBullet and MuJoCo using URDF representations matched to the Isaac Lab articulation. Quantify performance degradation across contact solvers (TGS vs. LCP), timestep resolutions, and friction models.
+- **Sim-to-Sim Gap Analysis:** Identify physics-engine-specific failure modes (e.g., foot-scuffing in rigid-contact simulators vs. soft-contact penetration in Isaac Lab). Use these discrepancies to guide targeted domain randomization—effectively treating simulator identity as an unobserved domain variable.
+- **Simulator-Agnostic Domain Randomization:** Expand randomization to include physics-parameter distributions that bracket cross-simulator variation (contact stiffness, solver iterations, joint damping). Goal: a single policy checkpoint that survives transfer across Isaac Lab, PyBullet without retraining.
+
+**Phase V — Autonomous Behaviors in Simulation (2027)**
+
+This phase advances beyond velocity tracking toward closed-loop, perception-driven locomotion entirely within high-fidelity simulation environments.
+
+- **Exteroceptive Terrain Perception:** Integrate simulated depth-camera or LiDAR point-cloud observations into the policy observation space. Train proactive foot-placement strategies for discrete terrain features (stairs, gaps, irregular stepping stones) using elevation maps rendered from simulated sensor streams.
+- **Multi-Gait Latent Spaces:** Extend the command space to include gait-mode switching (trot, pace, bound) via a latent-variable policy architecture or mixture-of-experts routing. Evaluate gait transition stability under rough-terrain perturbations.
+- **Sim-to-Sim Generalization:** Stress-test the full perception-locomotion stack under adversarial simulator configurations—varying physics backends, sensor noise models, and rendering engines—to establish upper bounds on sim-to-sim transfer fidelity as a proxy for real-world deployability.
 
 ---
 
