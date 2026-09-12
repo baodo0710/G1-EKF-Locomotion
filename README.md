@@ -12,6 +12,12 @@
 
 ---
 
+## Abstract
+
+This work presents a state-estimation-aware reinforcement learning framework for sim-to-real legged locomotion on the Unitree G1 humanoid, addressing a structural gap in standard legged-RL pipelines: reliance on privileged base velocity, a ground-truth signal available only in simulation. The proposed approach replaces this privileged observation with a Kalman-filtered velocity estimate reconstructed from on-board proprioceptive and inertial sensing, fusing world-frame accelerometer integration with leg-odometry zero-velocity updates derived from stance-foot Jacobian constraints. During aerial phases, identified via contact-force thresholding, the correction step is suspended and the estimate propagates open-loop, preserving the observability structure of physical contact sensing. An initial linear per-axis Kalman filter achieved 0.26 m/s mean absolute error against ground truth and supported convergence of a proximal-policy-optimization policy to a stable, timeout-surviving gait without ever observing privileged velocity during training. The framework is built as a manager-based Isaac Lab task extension spanning four Gym-registered environments for flat- and rough-terrain velocity tracking, with domain randomization over friction, mass, and external perturbations, and biomechanical reward shaping for swing-phase and contact-balance behavior. Current work extends the estimator to a body-frame Extended Kalman Filter under corrupted IMU inputs and sticky Markov-chain contact noise for rough-terrain generalization, with planned cross-simulator validation (PyBullet, MuJoCo) and exteroceptive perception-driven locomotion as subsequent research phases. This estimator-in-the-loop training methodology aims to close the sim-to-real observation gap at the training stage, ensuring learned policies never depend on information unavailable to physical hardware.
+
+---
+
 ## Origins: The Privileged Observation Gap
 
 Before closing the sim-to-real loop on the Unitree G1 humanoid, this project began as a principled interrogation of a structural assumption pervasive in legged locomotion reinforcement learning: the reliance on **privileged base velocity**, a ground-truth kinematic signal computed directly by the physics engine and exposed to the policy as an observation. No embodied system possesses this oracle. Physical platforms must reconstruct linear velocity from noisy inertial measurements, intermittent leg-odometry zero-velocity updates, and kinematic constraints subject to model uncertainty and contact sensing errors.
